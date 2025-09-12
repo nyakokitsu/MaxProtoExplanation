@@ -60,8 +60,40 @@ def unpack_packet(data: bytes):
     "payload":{"phone":"+79999999999","type":"START_AUTH","language":"ru"}
 ```
 
-#TODO: Дописать про распаковку
+# Шаг 3: Мега пердолинг
+Зная принцип распаковки маленьких пейлоадов, перейдем к большим.
+Для упаковки больших пейлоадов используется сжатие через lz4.
+Таким образом допишем нашу функцию до нужного вида.
+
+```
+import lz4.block
+import msgpack
+
+def unpack_packet(data: bytes):
+    ver = int.from_bytes(data[0:1], 'big')
+    cmd = int.from_bytes(data[1:3], 'big')
+    seq = int.from_bytes(data[3:4], 'big')
+    opcode = int.from_bytes(data[4:6], 'big')
+    packed_len = int.from_bytes(data[6:10], 'big', signed=False)
+    comp_flag = packed_len >> 24
+    payload_length = packed_len & 0xFFFFFF
+    payload_bytes = data[10:10 + payload_length]
+    if comp_flag != 0:
+        compressed_data = payload_bytes
+        try:
+            payload_bytes = lz4.block.decompress(compressed_data, uncompressed_size=255)
+        except lz4.block.LZ4BlockError:
+            return None
+    payload = msgpack.unpackb(payload_bytes, raw=False)
+    return {
+        "ver": ver,
+        "cmd": cmd,
+        "seq": seq,
+        "opcode": opcode,
+        "payload": payload
+    }
+```
 
 
 # Заключение
-Текст писал Дмитрий Уткин, авторы библиотек, ссылайтесь подайлуста на материал.
+Текст писал Дмитрий Уткин, авторы библиотек, ссылайтесь пожайлуста на материал. Спасибо.
