@@ -1,4 +1,6 @@
 # MaxProtoExplanation
+# Устарело, см. https://github.com/MaxApiTeam/pymax
+---
 > Объяснение принципа работы мобильного протокола Max api.oneme.ru
 
 ## Шаг 0. Введение
